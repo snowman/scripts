@@ -1,44 +1,48 @@
 #SingleInstance Force
+#Persistent
 
-;; This AutoHotkey script is to switch between open Windows of the same
-;; type and same App (.exe)
-;; The "type" checking is based on the App's Title convention that
-;; stipulates that the App name should be at the end of the Window title
-;; (Eg: New Document - Word )
-;; It works well with regular Window Apps, Chrome Shortcuts and Chrome Apps
+DetectHiddenWindows, Off
+
+;; Description
 ;;
+;;   This AutoHotkey script is to switch between different windows of the same process name.
+;;
+;;   The checking algorithm is based on the app's process basename without path.
+;;
+;;   It works well with regular Window apps, Explorer, Chrome, etc
 
-ExtractAppTitle(FullTitle)
-{
-  ;; Get the last field of empty-separated string
-  AppTitle := SubStr(FullTitle, InStr(FullTitle, " ", false, -1) + 1)
-  Return AppTitle
-}
-
-;; Activate NEXT Window of same type (title checking) of
-;; the current APP with "Alt + `"
+;; Usage
+;;
+;;   Activate NEXT window of same process name
+;;   of the current active app with "Alt + `"
 !`::
-WinGet, ActiveProcess, ProcessName, A
-WinGet, OpenWindowsAmount, Count, ahk_exe %ActiveProcess%
+WinGet, activeProcess, ProcessName, A
 
-If OpenWindowsAmount = 1
-  Return
-Else
+;; The command below create pseudo array like windowList<index>,
+;; and windowList is the count of total window found.
+;;
+;; windowList = 2              ;; two window
+;; windowList1 = 0xHEX_VALUE;  ;; first window
+;; windowList2 = 0xHEX_VALUE;  ;; second window
+WinGet, windowList, List, ahk_exe %activeProcess%
+windowCount := windowList
+
+If windowCount > 1
 {
-  WinGetTitle, FullTitle, A
-  AppTitle := ExtractAppTitle(FullTitle)
+    If (activeProcess = "explorer.exe") {
+        Loop, % windowCount {
+            rIndex := windowCount + 1 - A_Index
 
-  ;; The command below create varaible starts with WindowsWithSameTitleList
-  ;; For example, the below is get from "SciTE4AutoHotkey"
-  ;; WindowsWithSameTitleList = 2 ;; two window
-  ;; WindowsWithSameTitleList1 = 0xHEX_VALUE;
-  ;; WindowsWithSameTitleList2 = 0xHEX_VALUE;
-  SetTitleMatchMode, 2
-  WinGet, WindowsWithSameTitleList, List, %AppTitle%
+            WinGetClass, sClass, % "ahk_id " windowList%rIndex%
 
-  If WindowsWithSameTitleList > 1
-  {
-     WinActivate, % "ahk_id " WindowsWithSameTitleList%WindowsWithSameTitleList%
-  }
+            If (sClass = "CabinetWClass") {
+                WinActivate, % "ahk_id " windowList%rIndex%
+
+                break
+            }
+        }
+    } Else {
+        WinActivate, % "ahk_id " windowList%windowCount%
+    }
 }
 Return
