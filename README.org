@@ -1,0 +1,7 @@
+* TODO refactor main.cpp to use custom struct to save data
+instead of pass variable like print indentation to function to increase complexity.
+
+do one thing and do it well.
+
+auto data = read_recursively();
+pprint(data);

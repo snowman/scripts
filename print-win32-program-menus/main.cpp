@@ -12,6 +12,11 @@
 // idea
 //  display tree like `tree` commands, thinking menu as file inside folder.
 
+// Test
+// 1. notepad
+// 2. irfanview
+// 3. sublime text
+
 #include <stdio.h>
 #include <windows.h>
 
@@ -38,7 +43,7 @@ void ErrorExit(LPTSTR lpszFunction)
     // Display the error message and exit the process
     LocalFree(lpMsgBuf);
 
-    printf("Error, %d: %s", dw, lpMsgBuf);
+    printf("Error %s(%d): %s", lpszFunction, dw, lpMsgBuf);
 
     ExitProcess(dw);
 }
@@ -64,6 +69,28 @@ void printMenu(HMENU hMenu, int nPos, int level) {
   }
 }
 
+void printMenuRecursive(HMENU hMenu, int level) {
+  int menuCount = GetMenuItemCount(hMenu);
+  if (menuCount == -1) {
+    // ErrorExit(TEXT("GetMenuItemCount"));
+  }
+
+  for (int nPos=0; nPos<menuCount; nPos++) {
+    printMenu(hMenu, nPos, level);
+
+    HMENU hSubMenu = GetSubMenu(hMenu, nPos);
+    int subMenuItemCount = GetMenuItemCount(hSubMenu);
+
+    if (subMenuItemCount == -1) {
+      // ErrorExit(TEXT("GetMenuItemCount"));
+    }
+
+    if (subMenuItemCount > 0) {
+      printMenuRecursive(hSubMenu, level + 1);
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   LPCTSTR lpClassName = argc-1 > 0 ? argv[1] : "notepad";
 
@@ -77,18 +104,8 @@ int main(int argc, char *argv[]) {
   if (menuCount == -1) {
     ErrorExit(TEXT("GetMenuItemCount"));
   }
-  for (int nPos=0; nPos<menuCount; nPos++) {
-    printMenu(hmenuMain, nPos, 0);
 
-    HMENU hSubMenu = GetSubMenu(hmenuMain, nPos);
-    int subMenuItemCount = GetMenuItemCount(hSubMenu);
-    if (subMenuItemCount == -1) {
-      ErrorExit(TEXT("GetMenuItemCount"));
-    }
-    for (int subMenu_nPos=0; subMenu_nPos<subMenuItemCount; subMenu_nPos++) {
-      printMenu(hSubMenu, subMenu_nPos, 1);
-    }
-  }
+  printMenuRecursive(hmenuMain, 0);
 
   UINT menuId = 65; // Pickup your menuId
   // PostMessage(hWnd, WM_COMMAND, menuId, 0);
