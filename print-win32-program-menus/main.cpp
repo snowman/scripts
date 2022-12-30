@@ -17,6 +17,8 @@
 // 2. irfanview
 // 3. sublime text
 
+// TODO: provide query function, and open that menu
+
 #include <stdio.h>
 #include <windows.h>
 
